@@ -12,15 +12,21 @@
   <button id="captureBtn" type="button">Capture Photo</button>
   
   <script>
-    // Automatically redirect to Chrome on Android
-    (function() {
-      const isAndroid = /android/i.test(navigator.userAgent);
-      const currentUrl = window.location.href;
+    // Debugging: Log page load
+    console.log("Page loaded");
 
-      if (isAndroid) {
-        window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end;`;
-      }
-    })();
+    // Disable form submissions globally
+    document.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
+
+    // Disable default behavior on all buttons (extra precaution)
+    document.querySelectorAll('button').forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        console.log("Button clicked:", button.id);
+      });
+    });
 
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('captureBtn');
@@ -40,8 +46,7 @@
 
     // 2. Capture photo from video stream
     captureBtn.addEventListener('click', (event) => {
-      event.preventDefault();  // Prevent any default action, such as form submission or page reload
-
+      event.preventDefault();  // Ensure no default action triggers
       setTimeout(() => {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth || 300;
